@@ -4,26 +4,28 @@ Puppet::Type.newtype(:pg_database) do
 
   ensurable
 
-  newparam(:name, :namevar=>true) do
+  newparam(:name, :namevar => true) do
     desc "The name of the database."
   end
 
   newparam(:owner) do
-    desc "The owner of the database"
+    desc      "The owner of the database"
+    defaultto 'postgres'
+  end
 
-    defaultto :postgres
+  newparam(:template) do
+    desc      "The database template to use"
+    defaultto 'template0'
   end
 
   newparam(:encoding) do
-    desc "The character set encoding to use for the database"
-
-    defaultto :UTF8
+    desc      "The character set encoding to use for the database"
+    defaultto 'UTF8'
   end
 
   newparam(:locale) do
-    desc "The locale to use for collation. Typical values include 'C' or 'en_GB.UTF-8' or other specifiers"
-
-	defaultto :'en_GB.UTF-8'
+    desc      "The locale to use for collation - e.g. 'C' or 'en_US.UTF-8'"
+    defaultto 'en_US.UTF8'
   end
 
 end

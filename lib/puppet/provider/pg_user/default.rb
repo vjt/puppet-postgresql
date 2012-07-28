@@ -1,17 +1,35 @@
-Puppet::Type.type(:pg_user).provide(:default) do
+require 'puppet/provider/pg_common'
 
-  desc "A default pg_user provider which just fails."
+Puppet::Type.type(:pg_user).provide(:default) do
+  include Puppet::Provider::Postgresql
+
+  desc "Manage users for a postgres database"
 
   def create
-    return false
+    query =
+      "CREATE ROLE %s ENCRYPTED PASSWORD '%s' " \
+      "%sCREATEDB %sINHERIT %sLOGIN %sCREATEROLE %sSUPERUSER" % [
+
+        resource[:name],
+        resource[:password],
+
+        ('NO' if !resource[:createdb]  ),
+        ('NO' if !resource[:inherit]   ),
+        ('NO' if !resource[:login]     ),
+        ('NO' if !resource[:createrole]),
+        ('NO' if !resource[:superuser] )
+      ]
+
+    psql query
   end
 
   def destroy
-    return false
+    pgsu('dropuser %s' % resource[:name])
   end
 
   def exists?
-    fail('This is just the default provider for pg_user, all it does is fail')
+    output = psql("select 1 from pg_roles where rolname = '%s'" % resource[:name])
+    output.first == "1\n"
   end
 
 end
