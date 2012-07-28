@@ -6,8 +6,24 @@ Puppet::Type.type(:pg_user).provide(:default) do
   desc "Manage users for a postgres database"
 
   def create
-    query =
-      "CREATE ROLE %s ENCRYPTED PASSWORD '%s' " \
+    psql query_for('CREATE')
+  end
+
+  def destroy
+    pgsu('dropuser %s' % resource[:name])
+  end
+
+  def exists?
+    output = psql("SELECT 1 FROM pg_roles WHERE rolname = '%s'" % resource[:name])
+    return false unless output.first == "1\n"
+
+    psql query_for('ALTER')
+    return true
+  end
+
+  protected
+    def query_for(action)
+      "#{action} ROLE %s ENCRYPTED PASSWORD '%s' " \
       "%sCREATEDB %sINHERIT %sLOGIN %sCREATEROLE %sSUPERUSER" % [
 
         resource[:name],
@@ -19,17 +35,6 @@ Puppet::Type.type(:pg_user).provide(:default) do
         ('NO' if !resource[:createrole]),
         ('NO' if !resource[:superuser] )
       ]
-
-    psql query
-  end
-
-  def destroy
-    pgsu('dropuser %s' % resource[:name])
-  end
-
-  def exists?
-    output = psql("select 1 from pg_roles where rolname = '%s'" % resource[:name])
-    output.first == "1\n"
-  end
+    end
 
 end
