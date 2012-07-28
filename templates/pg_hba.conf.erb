@@ -1,0 +1,12 @@
+# pg_hba.conf managed by puppet - DO NOT EDIT
+
+# TYPE  DATABASE        USER            CIDR-ADDRESS            METHOD
+
+# The super-user is granted access ONLY locally
+#
+local   all             postgres                                ident
+host    all             postgres        0.0.0.0/0               reject
+
+# Site-defined ACLs
+#
+<%= Array.wrap(acls).join("\n") %>
