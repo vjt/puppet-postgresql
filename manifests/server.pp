@@ -33,32 +33,43 @@ class postgresql::server (
   }
 
   define config($ensure, $name) {
+    $confdir = $postgresql::server::confdir
+    $datadir = $postgresql::server::datadir
+    $sockdir = $postgresql::server::sockdir
+    $pidfile = $postgresql::server::pidfile
+    $listen  = $postgresql::server::listen
+    $port    = $postgresql::server::port
+    $acls    = $postgresql::server::acls
+
     file { $title:
       name    => "${confdir}/${name}",
       content => template("postgresql/${name}.erb"),
       ensure  => $ensure,
-      owner   => $user,
-      group   => $group,
+      owner   => $postgresql::server::user,
+      group   => $postgresql::server::group,
       mode    => '0600',
-      require => Datadir["postgresql-$version"],
-      notify  => Service["postgresql-$version"],
+      require => Datadir["postgresql-${postgresql::server::version}"],
+      notify  => Service["postgresql-${postgresql::server::version}"],
     }
   }
 
   define datadir($ensure) {
-    file { $datadir:
+    $path = $postgresql::server::datadir
+    $init = $postgresql::server::initdb
+
+    file { $path:
       ensure  => directory,
-      owner   => $user,
-      group   => $group,
+      owner   => $postgresql::server::user,
+      group   => $postgresql::server::group,
       mode    => '0700',
-      before  => Exec["postgresql-initdb-${version}"],
+      before  => Exec["postgresql-initdb-${postgresql::server::version}"],
     }
 
-    exec { "postgresql-initdb-${version}":
-      user      => $user,
-      group     => $group,
-      creates   => "${datadir}/PG_VERSION",
-      command   => "${initdb} --locale=en_US.UTF8 ${datadir}",
+    exec { "postgresql-initdb-${postgresql::server::version}":
+      user      => $postgresql::server::user,
+      group     => $postgresql::server::group,
+      creates   => "${path}/PG_VERSION",
+      command   => "${init} --locale=en_US.UTF8 ${path}",
       logoutput => true,
     }
   }
